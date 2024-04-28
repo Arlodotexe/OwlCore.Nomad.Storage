@@ -1,15 +1,8 @@
 # OwlCore.Nomad.Storage [![Version](https://img.shields.io/nuget/v/OwlCore.Nomad.Storage.svg)](https://www.nuget.org/packages/OwlCore.Nomad.Storage)
 
-Description goes here.
+A virtual storage implementation powered by shared event sourcing.
 
-Extended description goes here. Tell people why they should use your module, how they can install it, and how they can use it. Documentation takes work!
-
-## 
-
-## Featuring:
-- x
-- y
-- z
+This library is in prerelease and documentation is work in progress. Please return later.
 
 ## Install
 

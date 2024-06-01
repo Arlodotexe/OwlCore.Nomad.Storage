@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using OwlCore.ComponentModel;
-using OwlCore.ComponentModel.Nomad;
+using OwlCore.Nomad;
 using OwlCore.Nomad.Storage.Models;
 using OwlCore.Storage;
 

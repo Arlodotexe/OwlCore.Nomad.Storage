@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using OwlCore.ComponentModel;
-using OwlCore.ComponentModel.Nomad;
+using OwlCore.Nomad;
 using OwlCore.Storage;
 
 namespace OwlCore.Kubo.Nomad.Storage;

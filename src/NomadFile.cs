@@ -1,5 +1,5 @@
 ﻿using OwlCore.ComponentModel;
-using OwlCore.ComponentModel.Nomad;
+using OwlCore.Nomad;
 using OwlCore.Nomad.Storage.Models;
 using System.Collections.Generic;
 using System.Threading;

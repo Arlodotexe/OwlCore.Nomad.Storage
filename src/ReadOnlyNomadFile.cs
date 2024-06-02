@@ -1,13 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using OwlCore.ComponentModel;
+using OwlCore.Nomad.Storage.Models;
+using OwlCore.Storage;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using OwlCore.ComponentModel;
-using OwlCore.Nomad;
-using OwlCore.Nomad.Storage.Models;
-using OwlCore.Storage;
 
-namespace OwlCore.Kubo.Nomad.Storage;
+namespace OwlCore.Nomad.Storage;
 
 /// <summary>
 /// A virtual file constructed by advancing an <see cref="IEventStreamHandler{TEventStreamEntry}.EventStreamPosition"/> using multiple <see cref="ISources{T}.Sources"/> in concert with other <see cref="ISharedEventStreamHandler{TContentPointer, TEventStreamSource, TEventStreamEntry, TListeningHandlers}.ListeningEventStreamHandlers"/>.

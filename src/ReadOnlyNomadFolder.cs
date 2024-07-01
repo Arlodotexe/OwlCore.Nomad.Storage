@@ -36,7 +36,7 @@ public abstract class ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, T
     public required string Name { get; init; }
 
     /// <inheritdoc />
-    public required ICollection<TEventStreamSource> Sources { get; init; }
+    public required ICollection<TContentPointer> Sources { get; init; }
 
     /// <inheritdoc />
     public TEventStreamEntry? EventStreamPosition { get; set; }

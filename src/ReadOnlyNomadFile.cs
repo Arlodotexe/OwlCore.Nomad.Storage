@@ -50,7 +50,7 @@ public abstract class ReadOnlyNomadFile<TContentPointer, TEventStreamSource, TEv
     public TEventStreamEntry? EventStreamPosition { get; set; }
 
     /// <inheritdoc />
-    public required ICollection<TEventStreamSource> Sources { get; init; }
+    public required ICollection<TContentPointer> Sources { get; init; }
 
     /// <inheritdoc />
     public abstract Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default);

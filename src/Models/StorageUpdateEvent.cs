@@ -14,7 +14,8 @@ public abstract record StorageUpdateEvent(string StorableItemId, string EventId)
 /// <summary>
 /// Represents an update event for a folder.
 /// </summary>
-/// <param name="WorkingFolderId">The ID of the folder.</param>
+/// <param name="WorkingFolderId">The ID of the folder being updated.</param>
+/// <param name="StorableItemId">The storable item being updated in the folder.</param>
 /// <param name="EventId">A unique identifier for this event.</param>
 public abstract record FolderUpdateEvent(string WorkingFolderId, string StorableItemId, string EventId) : StorageUpdateEvent(StorableItemId, EventId);
 

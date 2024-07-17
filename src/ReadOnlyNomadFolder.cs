@@ -66,6 +66,8 @@ public abstract class ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, T
     /// <inheritdoc />
     public virtual async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        await Task.Yield();
+
         foreach (var item in Items)
         {
             if (cancellationToken.IsCancellationRequested)

@@ -24,5 +24,5 @@ public abstract class NomadFile<TContentPointer, TEventStreamSource, TEventStrea
     }
 
     /// <inheritdoc/>
-    public abstract Task AppendNewEntryAsync(StorageUpdateEvent updateEvent, CancellationToken cancellationToken = default);
+    public abstract Task<TEventStreamEntry> AppendNewEntryAsync(StorageUpdateEvent updateEvent, CancellationToken cancellationToken = default);
 }

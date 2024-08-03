@@ -33,5 +33,5 @@ public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStr
     public abstract Task DeleteAsync(IStorableChild item, CancellationToken cancellationToken = default);
 
     /// <inheritdoc/>
-    public abstract Task AppendNewEntryAsync(StorageUpdateEvent updateEvent, CancellationToken cancellationToken = default);
+    public abstract Task<TEventStreamEntry> AppendNewEntryAsync(StorageUpdateEvent updateEvent, CancellationToken cancellationToken = default);
 }

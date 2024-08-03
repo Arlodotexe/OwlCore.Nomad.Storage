@@ -6,15 +6,17 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using OwlCore.Nomad.Storage.Models;
 
 namespace OwlCore.Nomad.Storage;
 
 /// <summary>
 /// A virtual folder constructed by advancing an <see cref="IEventStreamHandler{TEventStreamEntry}.EventStreamPosition"/> using multiple <see cref="ISources{T}.Sources"/> in concert with other <see cref="ISharedEventStreamHandler{TContentPointer, TEventStreamSource, TEventStreamEntry, TListeningHandlers}.ListeningEventStreamHandlers"/>.
 /// </summary>
-public abstract class ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry> : ISharedEventStreamHandler<TContentPointer, TEventStreamSource, TEventStreamEntry>, IFolder, IMutableFolder, IChildFolder, IGetItem
+public abstract class ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry> : ISharedEventStreamHandler<TContentPointer, TEventStreamSource, TEventStreamEntry>, IFolder, IMutableFolder, IChildFolder, IGetItem, IDelegable<NomadFolderData<TContentPointer>>, IGetRoot
     where TEventStreamSource : EventStream<TContentPointer>
     where TEventStreamEntry : EventStreamEntry<TContentPointer>
+    where TContentPointer : class
 {
     /// <summary>
     /// Creates a new instance of <see cref="ReadOnlyNomadFolder{TContentPointer, TEventStreamSource, TEventStreamEntry}"/>.
@@ -30,10 +32,10 @@ public abstract class ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, T
     public virtual ICollection<ISharedEventStreamHandler<TContentPointer, TEventStreamSource, TEventStreamEntry>> ListeningEventStreamHandlers { get; }
 
     /// <inheritdoc cref="IStorable.Id" />
-    public required string Id { get; init; }
+    public string Id => Inner.StorableItemId;
 
     /// <inheritdoc />
-    public required string Name { get; init; }
+    public string Name => Inner.StorableItemName;
 
     /// <inheritdoc />
     public required ICollection<TContentPointer> Sources { get; init; }
@@ -45,18 +47,16 @@ public abstract class ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, T
     /// The parent for this folder, if any.
     /// </summary>
     public required ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry>? Parent { get; init; }
-
-    /// <summary>
-    /// The items in this folder at the current event stream position.
-    /// </summary>
-    public List<IStorableChild> Items { get; init; } = new();
+    
+    /// <inheritdoc />
+    public required NomadFolderData<TContentPointer> Inner { get; set; }
 
     /// <inheritdoc />
     public virtual Task ResetEventStreamPositionAsync(CancellationToken cancellationToken)
     {
         EventStreamPosition = null;
-        Items.Clear();
-
+        Inner = new NomadFolderData<TContentPointer> {  StorableItemName = Name, StorableItemId = Id };
+            
         return Task.CompletedTask;
     }
 
@@ -68,24 +68,44 @@ public abstract class ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, T
     {
         await Task.Yield();
 
-        foreach (var item in Items)
+        if (type.HasFlag(StorableType.File))
         {
-            if (cancellationToken.IsCancellationRequested)
-                yield break;
+            foreach (var item in Inner.Files.ToArray())
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    yield break;
 
-            if (type == StorableType.All || (item is IFile && type.HasFlag(StorableType.File)) || (item is IFolder && type.HasFlag(StorableType.Folder)))
-                yield return item;
+                if (item != null)
+                    yield return await FileDataToInstanceAsync(item, cancellationToken);
+            }
+        }
+            
+
+        if (type.HasFlag(StorableType.Folder))
+        {
+            foreach (var item in Inner.Folders.ToArray())
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    yield break;
+                
+                if (item != null)
+                    yield return await FolderDataToInstanceAsync(item, cancellationToken);
+            }
         }
     }
 
     /// <inheritdoc />
-    public virtual Task<IStorableChild> GetItemAsync(string id, CancellationToken cancellationToken = default)
+    public virtual async Task<IStorableChild> GetItemAsync(string id, CancellationToken cancellationToken = default)
     {
-        var target = Items.FirstOrDefault(x => x.Id == id);
-        if (target is null)
-            throw new FileNotFoundException();
-
-        return Task.FromResult(target);
+        var fileTarget = Inner.Files.FirstOrDefault(x => x.StorableItemId == id);
+        if (fileTarget is not null)
+            return await FileDataToInstanceAsync(fileTarget, cancellationToken);
+        
+        var folderTarget = Inner.Folders.FirstOrDefault(x => x.StorableItemId == id);
+        if (folderTarget is not null)
+            return await FolderDataToInstanceAsync(folderTarget, cancellationToken);
+        
+        throw new FileNotFoundException();
     }
 
     /// <inheritdoc />
@@ -93,4 +113,36 @@ public abstract class ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, T
 
     /// <inheritdoc />
     public Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default) => Task.FromResult<IFolder?>(Parent);
+
+    /// <inheritdoc />
+    public Task<IFolder?> GetRootAsync(CancellationToken cancellationToken = default)
+    {
+        // No parent = no root
+        if (Parent is null)
+            return Task.FromResult<IFolder?>(null);
+        
+        // At least one parent is required for a root to exist
+        // Crawl up and return where parent is null
+        var current = this;
+        while (current.Parent is { } parent)
+        {
+            current = parent;
+        }
+
+        return Task.FromResult<IFolder?>(current);
+    }
+
+    /// <summary>
+    /// Transform file data to file instance.
+    /// </summary>
+    /// <param name="fileData">The file data to transform.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    protected abstract Task<ReadOnlyNomadFile<TContentPointer, TEventStreamSource, TEventStreamEntry>> FileDataToInstanceAsync(NomadFileData<TContentPointer> fileData, CancellationToken cancellationToken);   
+    
+    /// <summary>
+    /// Transforms folder data to a folder instance.
+    /// </summary>
+    /// <param name="folderData">The folder data to transform.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
+    protected abstract Task<ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry>> FolderDataToInstanceAsync(NomadFolderData<TContentPointer> folderData, CancellationToken cancellationToken); 
 }

@@ -6,10 +6,17 @@ namespace OwlCore.Nomad.Storage.Models;
 /// <summary>
 /// Represents an update event for a folder.
 /// </summary>
-/// <param name="StorableItemId">The Id of the <see cref="IStorable"/> that was updated.</param>
+/// <param name="StorableItemId">The id of the <see cref="IStorable"/> that was updated.</param>
 /// <param name="EventId">A unique identifier for this event.</param>
 [JsonConverter(typeof(NomadEventJsonConverter))]
 public abstract record StorageUpdateEvent(string StorableItemId, string EventId);
+
+/// <summary>
+/// Represents an update event for a file.
+/// </summary>
+/// <param name="StorableItemId">The id of the file that was changed.</param>
+/// <param name="NewContentId">A Cid that represents immutable content. The same ID should always point to the same content, and different content should point to different Ids.</param>
+public record FileUpdateEvent<TContentPointer>(string StorableItemId, TContentPointer NewContentId) : StorageUpdateEvent(StorableItemId, "file_update");
 
 /// <summary>
 /// Represents an update event for a folder.

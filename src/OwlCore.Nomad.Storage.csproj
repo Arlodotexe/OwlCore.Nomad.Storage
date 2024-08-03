@@ -14,14 +14,29 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.4.1</Version>
+		<Version>0.5.0</Version>
 		<Product>OwlCore</Product>
 		<Description></Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Storage</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.5.0 ---
+[Breaking]
+Added class constraint to TContentPointer throughout the library.
+Implementors of ReadOnlyNomadFolder must implement the new abstract methods FileDataToInstanceAsync and FolderDataToInstanceAsync and advance their event stream before returning.
+
+[New]
+Added NomadFileData{TContentPointer} and NomadFolderData{TContentPointer} classes for publishing to roaming.
+Added FileUpdateEvent{TContentPointer} for publishing updates to a file pointer in an event stream. 
+
+[Improvements]
+ReadOnlyNomadFolder now implements IGetRoot instead of relying on fallback extension method and recursive GetParentAsync calls.
+ReadOnlyNomadFolder now implements IDelegable{NomadFolderData{TContentPointer}} instead of using arbitrary properties to hold current state.
+ReadOnlyNomadFile now implements IDelegable{NomadFileData{TContentPointer}} instead of using arbitrary properties to hold current state.
+
 --- 0.4.1 ---
+[Improvements]
 Bumped OwlCore.Nomad to 0.5.1, which bumps OwlCore.ComponentModel to 0.8.2.
 
 --- 0.4.0 ---

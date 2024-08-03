@@ -11,9 +11,10 @@ namespace OwlCore.Nomad.Storage;
 /// <summary>
 /// A virtual file constructed by advancing an <see cref="IEventStreamHandler{TEventStreamEntry}.EventStreamPosition"/> using multiple <see cref="ISources{T}.Sources"/> in concert with other <see cref="ISharedEventStreamHandler{TContentPointer, TEventStreamSource, TEventStreamEntry, TListeningHandlers}.ListeningEventStreamHandlers"/>.
 /// </summary>
-public abstract class ReadOnlyNomadFile<TContentPointer, TEventStreamSource, TEventStreamEntry> : IFile, IChildFile, ISharedEventStreamHandler<TContentPointer, TEventStreamSource, TEventStreamEntry>
+public abstract class ReadOnlyNomadFile<TContentPointer, TEventStreamSource, TEventStreamEntry> : IFile, IChildFile, ISharedEventStreamHandler<TContentPointer, TEventStreamSource, TEventStreamEntry>, IDelegable<NomadFileData<TContentPointer>>
     where TEventStreamSource : EventStream<TContentPointer>
     where TEventStreamEntry : EventStreamEntry<TContentPointer>
+    where TContentPointer : class
 {
     /// <summary>
     /// Creates a new instance of <see cref="ReadOnlyNomadFile{TContentPointer, TEventStreamSource, TEventStreamEntry}"/>.
@@ -29,20 +30,24 @@ public abstract class ReadOnlyNomadFile<TContentPointer, TEventStreamSource, TEv
     public ICollection<ISharedEventStreamHandler<TContentPointer, TEventStreamSource, TEventStreamEntry>> ListeningEventStreamHandlers { get; }
 
     /// <inheritdoc cref="IStorable.Id" />
-    public required string Id { get; init; }
+    public string Id => Inner.StorableItemId;
 
     /// <inheritdoc />
-    public required string Name { get; set; }
+    public string Name => Inner.StorableItemName;
 
     /// <summary>
     /// The parent folder of this file.
     /// </summary>
     public required IFolder Parent { get; init; }
+    
+    /// <inheritdoc />
+    public required NomadFileData<TContentPointer> Inner { get; set; }
 
     /// <inheritdoc />
     public virtual Task ResetEventStreamPositionAsync(CancellationToken cancellationToken)
     {
         EventStreamPosition = null;
+        Inner = new NomadFileData<TContentPointer> {  StorableItemName = Name, StorableItemId = Id, ContentId = null, };
         return Task.CompletedTask;
     }
 

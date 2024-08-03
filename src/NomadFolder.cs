@@ -13,6 +13,7 @@ namespace OwlCore.Nomad.Storage;
 public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry> : ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry>, IModifiableFolder, IModifiableSharedEventStreamHandler<StorageUpdateEvent, TContentPointer, TEventStreamSource, TEventStreamEntry>
     where TEventStreamSource : EventStream<TContentPointer>
     where TEventStreamEntry : EventStreamEntry<TContentPointer>
+    where TContentPointer : class
 {
     /// <summary>
     /// Creates a new instance of <see cref="NomadFolder{TContentPointer, TEventStreamSource, TEventStreamEntry}"/>.

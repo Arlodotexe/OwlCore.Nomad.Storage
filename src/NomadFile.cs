@@ -12,6 +12,7 @@ namespace OwlCore.Nomad.Storage;
 public abstract class NomadFile<TContentPointer, TEventStreamSource, TEventStreamEntry> : ReadOnlyNomadFile<TContentPointer, TEventStreamSource, TEventStreamEntry>, IModifiableSharedEventStreamHandler<StorageUpdateEvent, TContentPointer, TEventStreamSource, TEventStreamEntry>
     where TEventStreamSource : EventStream<TContentPointer>
     where TEventStreamEntry : EventStreamEntry<TContentPointer>
+    where TContentPointer : class
 {
     /// <summary>
     /// Creates a new instance of <see cref="NomadFile{TContentPointer, TEventStreamSource, TEventStreamEntry}"/>.
@@ -21,11 +22,6 @@ public abstract class NomadFile<TContentPointer, TEventStreamSource, TEventStrea
         : base(listeningEventStreamHandlers)
     {
     }
-
-    /// <summary>
-    /// The name of the local ipns key to publish event stream changes to.
-    /// </summary>
-    public required string LocalEventStreamKeyName { get; init; }
 
     /// <inheritdoc/>
     public abstract Task AppendNewEntryAsync(StorageUpdateEvent updateEvent, CancellationToken cancellationToken = default);

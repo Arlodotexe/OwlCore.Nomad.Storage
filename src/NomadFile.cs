@@ -9,7 +9,7 @@ namespace OwlCore.Nomad.Storage;
 /// <summary>
 /// A virtual file constructed by advancing an <see cref="IEventStreamHandler{TEventStreamEntry}.EventStreamPosition"/> using multiple <see cref="ISources{T}.Sources"/> in concert with other <see cref="ISharedEventStreamHandler{TContentPointer, TEventStreamSource, TEventStreamEntry, TListeningHandlers}.ListeningEventStreamHandlers"/>.
 /// </summary>
-public abstract class NomadFile<TContentPointer, TEventStreamSource, TEventStreamEntry> : ReadOnlyNomadFile<TContentPointer, TEventStreamSource, TEventStreamEntry>, IModifiableSharedEventStreamHandler<StorageUpdateEvent, TContentPointer, TEventStreamSource, TEventStreamEntry>
+public abstract class NomadFile<TContentPointer, TEventStreamSource, TEventStreamEntry> : ReadOnlyNomadFile<TContentPointer, TEventStreamSource, TEventStreamEntry>
     where TEventStreamSource : EventStream<TContentPointer>
     where TEventStreamEntry : EventStreamEntry<TContentPointer>
     where TContentPointer : class
@@ -22,7 +22,4 @@ public abstract class NomadFile<TContentPointer, TEventStreamSource, TEventStrea
         : base(listeningEventStreamHandlers)
     {
     }
-
-    /// <inheritdoc/>
-    public abstract Task<TEventStreamEntry> AppendNewEntryAsync(StorageUpdateEvent updateEvent, CancellationToken cancellationToken = default);
 }

@@ -9,12 +9,11 @@ namespace OwlCore.Nomad.Storage.Models;
 
 internal static class FolderUpdateEventSerializationHelpers
 {
-    internal static JObject? Write(StorageUpdateEvent @event)
+    internal static JObject? Write(FolderUpdateEvent @event)
     {
         var jObject = new JObject();
 
         jObject.AddFirst(new JProperty("eventId", new JValue(@event.EventId)));
-
         jObject.AddFirst(new JProperty("storableItemId", new JValue(@event.StorableItemId)));
 
         if (@event is CreateFileInFolderEvent createFileInFolderEvent)
@@ -54,7 +53,7 @@ internal static class FolderUpdateEventSerializationHelpers
         throw new NotSupportedException($"Token type {token.Type} is not supported.");
     }
 
-    internal static StorageUpdateEvent? Read(JObject jObject, JsonSerializer serializer)
+    internal static FolderUpdateEvent? Read(JObject jObject, JsonSerializer serializer)
     {
         var eventId = jObject["eventId"]?.Value<string>();
         var workingFolderId = jObject["workingFolderId"]?.Value<string>();
@@ -65,7 +64,7 @@ internal static class FolderUpdateEventSerializationHelpers
         Guard.IsNotNullOrWhiteSpace(workingFolderId);
         Guard.IsNotNullOrWhiteSpace(storableItemId);
 
-        if (eventId == "create_file_in_folder")
+        if (eventId == nameof(CreateFileInFolderEvent))
         {
             Guard.IsNotNull(storableItemName);
 
@@ -75,7 +74,7 @@ internal static class FolderUpdateEventSerializationHelpers
             return new CreateFileInFolderEvent(workingFolderId, storableItemId, storableItemName, overwrite.Value);
         }
 
-        if (eventId == "create_folder_in_folder")
+        if (eventId == nameof(CreateFolderInFolderEvent))
         {
             Guard.IsNotNull(storableItemName);
             
@@ -85,7 +84,7 @@ internal static class FolderUpdateEventSerializationHelpers
             return new CreateFolderInFolderEvent(workingFolderId, storableItemId, storableItemName, overwrite.Value);
         }
 
-        if (eventId == "deleted_from_folder")
+        if (eventId == nameof(DeleteFromFolderEvent))
         {
             Guard.IsNotNull(storableItemName);
             return new DeleteFromFolderEvent(workingFolderId, storableItemId, storableItemName);

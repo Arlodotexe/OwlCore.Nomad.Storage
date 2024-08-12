@@ -14,13 +14,24 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.6.0</Version>
+		<Version>0.7.0</Version>
 		<Product>OwlCore</Product>
 		<Description></Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Storage</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.7.0 ---
+[Breaking]
+Inherited and implemented breaking changes from OwlCore.Nomad 0.7.0.
+StorageUpdateEvent was renamed to FolderUpdateEvent.
+FileUpdateEvent was removed and should be defined by the Implementor. File update events cannot be serialized without knowing the generic. 
+Abstract method ReadOnlyNomadFile.ApplyEntryUpdateAsync was removed. Method signature should be defined in derived class instead.
+Abstract method NomadFile.ApplyEntryUpdateAsync was removed. Method signature should be defined in derived class instead.
+Abstract method NomadFolder.ApplyEntryUpdateAsync was removed. Method signature should be defined in derived class instead.
+EventId used for folder updates now use nameof(ClassName) instead of a hardcoded string.
+Abstract class NomadFile no longer implements IModifiableSharedEventStreamHandler since file update events cannot be serialized without knowing the generic. 
+
 --- 0.6.0 ---
 [Breaking]
 Inherited and implemented breaking changes from OwlCore.Nomad 0.6.0.
@@ -99,7 +110,7 @@ Initial release of OwlCore.Nomad.Storage.
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="OwlCore.Extensions" Version="0.8.0" />
-		<PackageReference Include="OwlCore.Nomad" Version="0.6.0" />
+		<PackageReference Include="OwlCore.Nomad" Version="0.7.0" />
 		<PackageReference Include="OwlCore.Storage" Version="0.11.3" />
 		<PackageReference Include="PolySharp" Version="1.14.1">
 		  <PrivateAssets>all</PrivateAssets>

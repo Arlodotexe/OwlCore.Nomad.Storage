@@ -5,18 +5,18 @@ using System;
 namespace OwlCore.Nomad.Storage.Models;
 
 /// <summary>
-/// A custom json convert for discriminating the various types of <see cref="StorageUpdateEvent"/>.
+/// A custom json convert for discriminating the various types of <see cref="FolderUpdateEvent"/>.
 /// </summary>
-public class NomadEventJsonConverter : JsonConverter
+public class NomadFolderEventJsonConverter : JsonConverter
 {
     /// <inheritdoc />
     public override bool CanConvert(Type objectType)
     {
-        if (objectType == typeof(StorageUpdateEvent))
+        if (objectType == typeof(FolderUpdateEvent))
             return true;
 
         var arrayElement = objectType.GetElementType();
-        if (objectType.IsArray && arrayElement == typeof(StorageUpdateEvent))
+        if (objectType.IsArray && arrayElement == typeof(FolderUpdateEvent))
             return true;
 
         return false;
@@ -60,12 +60,12 @@ public class NomadEventJsonConverter : JsonConverter
         if (value is null)
             return;
 
-        if (value is StorageUpdateEvent connection)
+        if (value is FolderUpdateEvent connection)
         {
             var jObject = FolderUpdateEventSerializationHelpers.Write(connection);
             jObject?.WriteTo(writer);
         }
-        else if (value is StorageUpdateEvent[] connections)
+        else if (value is FolderUpdateEvent[] connections)
         {
             var jArray = new JArray();
             foreach (var item in connections)

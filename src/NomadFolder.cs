@@ -10,7 +10,7 @@ namespace OwlCore.Nomad.Storage;
 /// <summary>
 /// A virtual file constructed by advancing an <see cref="IEventStreamHandler{TEventStreamEntry}.EventStreamPosition"/> using multiple <see cref="ISources{T}.Sources"/> in concert with other <see cref="ISharedEventStreamHandler{TContentPointer, TEventStreamSource, TEventStreamEntry, TListeningHandlers}.ListeningEventStreamHandlers"/>.
 /// </summary>
-public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry> : ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry>, IModifiableFolder, IModifiableSharedEventStreamHandler<StorageUpdateEvent, TContentPointer, TEventStreamSource, TEventStreamEntry>
+public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry> : ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry>, IModifiableFolder, IModifiableSharedEventStreamHandler<FolderUpdateEvent, TContentPointer, TEventStreamSource, TEventStreamEntry>
     where TEventStreamSource : EventStream<TContentPointer>
     where TEventStreamEntry : EventStreamEntry<TContentPointer>
     where TContentPointer : class
@@ -33,5 +33,5 @@ public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStr
     public abstract Task DeleteAsync(IStorableChild item, CancellationToken cancellationToken = default);
 
     /// <inheritdoc/>
-    public abstract Task<TEventStreamEntry> AppendNewEntryAsync(StorageUpdateEvent updateEvent, CancellationToken cancellationToken = default);
+    public abstract Task<TEventStreamEntry> AppendNewEntryAsync(FolderUpdateEvent updateEvent, CancellationToken cancellationToken = default);
 }

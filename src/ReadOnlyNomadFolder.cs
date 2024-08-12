@@ -31,6 +31,9 @@ public abstract class ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, T
     /// <inheritdoc />
     public virtual ICollection<ISharedEventStreamHandler<TContentPointer, TEventStreamSource, TEventStreamEntry>> ListeningEventStreamHandlers { get; }
 
+    /// <inheritdoc />
+    public required string EventStreamId { get; init; }
+
     /// <inheritdoc cref="IStorable.Id" />
     public string Id => Inner.StorableItemId;
 
@@ -61,7 +64,7 @@ public abstract class ReadOnlyNomadFolder<TContentPointer, TEventStreamSource, T
     }
 
     /// <inheritdoc />
-    public abstract Task TryAdvanceEventStreamAsync(TEventStreamEntry streamEntry, CancellationToken cancellationToken);
+    public abstract Task AdvanceEventStreamAsync(TEventStreamEntry streamEntry, CancellationToken cancellationToken);
 
     /// <inheritdoc />
     public virtual async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)

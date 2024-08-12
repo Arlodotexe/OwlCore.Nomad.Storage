@@ -33,6 +33,9 @@ public abstract class ReadOnlyNomadFile<TContentPointer, TEventStreamSource, TEv
     public string Id => Inner.StorableItemId;
 
     /// <inheritdoc />
+    public required string EventStreamId { get; init; }
+
+    /// <inheritdoc />
     public string Name => Inner.StorableItemName;
 
     /// <summary>
@@ -61,14 +64,7 @@ public abstract class ReadOnlyNomadFile<TContentPointer, TEventStreamSource, TEv
     public abstract Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default);
 
     /// <inheritdoc />
-    public abstract Task TryAdvanceEventStreamAsync(TEventStreamEntry streamEntry, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Applies the provided storage update event without external side effects.
-    /// </summary>
-    /// <param name="updateEvent">The event to apply.</param>
-    /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public abstract Task ApplyEntryUpdateAsync(StorageUpdateEvent updateEvent, CancellationToken cancellationToken);
+    public abstract Task AdvanceEventStreamAsync(TEventStreamEntry streamEntry, CancellationToken cancellationToken);
 
     /// <inheritdoc />
     public Task<IFolder?> GetParentAsync(CancellationToken cancellationToken = default) => Task.FromResult<IFolder?>(Parent);

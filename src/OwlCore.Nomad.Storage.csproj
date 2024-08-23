@@ -14,13 +14,18 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.7.0</Version>
+		<Version>0.8.0</Version>
 		<Product>OwlCore</Product>
 		<Description></Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Storage</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.8.0 ---
+[Breaking]
+Inherited and implemented breaking changes from OwlCore.Nomad 0.8.0.
+Removed ReadOnlyNomadFile and ReadOnlyNomadFolder. 'ReadOnly' doesn't require an event stream handler, since it can be constructed from the published roaming snapshot without an event stream.
+
 --- 0.7.0 ---
 [Breaking]
 Inherited and implemented breaking changes from OwlCore.Nomad 0.7.0.
@@ -110,7 +115,7 @@ Initial release of OwlCore.Nomad.Storage.
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="OwlCore.Extensions" Version="0.8.0" />
-		<PackageReference Include="OwlCore.Nomad" Version="0.7.0" />
+		<PackageReference Include="OwlCore.Nomad" Version="0.8.0" />
 		<PackageReference Include="OwlCore.Storage" Version="0.11.3" />
 		<PackageReference Include="PolySharp" Version="1.14.1">
 		  <PrivateAssets>all</PrivateAssets>

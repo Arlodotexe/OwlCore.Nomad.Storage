@@ -14,7 +14,7 @@ namespace OwlCore.Nomad.Storage;
 /// <summary>
 /// A virtual folder constructed by advancing an <see cref="IEventStreamHandler{TContentPointer, TEventStream, TEventStreamEntry}.EventStreamPosition"/> using multiple <see cref="ISources{T}.Sources"/> in concert with other <see cref="ISharedEventStreamHandler{TContentPointer, TEventStreamSource, TEventStreamEntry, TListeningHandlers}.ListeningEventStreamHandlers"/>.
 /// </summary>
-public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry> : ISharedEventStreamHandler<TContentPointer, TEventStreamSource, TEventStreamEntry>, IModifiableFolder, IMutableFolder, IChildFolder, IGetItem, IGetRoot, ICreateCopyOf, IGetFirstByName, IDelegable<NomadFolderData<TContentPointer>>
+public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry> : ISharedEventStreamHandler<TContentPointer, TEventStreamSource, TEventStreamEntry>, IModifiableFolder, IMutableFolder, IChildFolder, IGetItem, IGetRoot, IGetFirstByName, IDelegable<NomadFolderData<TContentPointer>>
     where TEventStreamSource : EventStream<TContentPointer>
     where TEventStreamEntry : EventStreamEntry<TContentPointer>
     where TContentPointer : class
@@ -148,29 +148,6 @@ public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStr
 
         Guard.IsNotNull(createdFileData);
         return await FileDataToInstanceAsync(createdFileData, cancellationToken);
-    }
-
-    /// <inheritdoc/>
-    public async Task<IChildFile> CreateCopyOfAsync(IFile fileToCopy, bool overwrite, CancellationToken cancellationToken, CreateCopyOfDelegate fallback)
-    {
-        var existing = Inner.Files.FirstOrDefault(x => x.StorableItemName == fileToCopy.Name);
-        if (overwrite && existing is not null)
-        {
-            // Delete before creating.
-            var storageUpdateEvent = new DeleteFromFolderEvent(Id, existing.StorableItemId, existing.StorableItemName);
-            await ApplyEntryUpdateAsync(storageUpdateEvent, cancellationToken);
-            EventStreamPosition = await AppendNewEntryAsync(storageUpdateEvent, cancellationToken);
-        }
-        
-        var destinationFile = await CreateFileAsync(fileToCopy.Name, overwrite, cancellationToken);
-        var destinationStream = await destinationFile.OpenWriteAsync(cancellationToken);
-        var sourceStream = await fileToCopy.OpenReadAsync(cancellationToken);
-
-        await sourceStream.CopyToAsync(destinationStream, 81920, cancellationToken);
-        destinationStream.Dispose();
-        sourceStream.Dispose();
-        
-        return destinationFile;
     }
 
     /// <inheritdoc />

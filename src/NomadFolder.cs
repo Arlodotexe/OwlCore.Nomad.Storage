@@ -56,7 +56,7 @@ public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStr
     /// <summary>
     /// The parent for this folder, if any.
     /// </summary>
-    public required NomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry>? Parent { get; init; }
+    public required IFolder? Parent { get; init; }
     
     /// <inheritdoc />
     public required NomadFolderData<TContentPointer> Inner { get; set; }
@@ -160,7 +160,7 @@ public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStr
         // At least one parent is required for a root to exist
         // Crawl up and return where parent is null
         var current = this;
-        while (current.Parent is { } parent)
+        while (current.Parent is NomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry> parent)
         {
             current = parent;
         }

@@ -12,26 +12,13 @@ using OwlCore.Nomad.Storage.Models;
 namespace OwlCore.Nomad.Storage;
 
 /// <summary>
-/// A virtual folder constructed by advancing an <see cref="IEventStreamHandler{TContentPointer, TEventStream, TEventStreamEntry}.EventStreamPosition"/> using multiple <see cref="ISources{T}.Sources"/> in concert with other <see cref="ISharedEventStreamHandler{TContentPointer, TEventStreamSource, TEventStreamEntry, TListeningHandlers}.ListeningEventStreamHandlers"/>.
+/// A virtual folder constructed by advancing an <see cref="IEventStreamHandler{TContentPointer, TEventStream, TEventStreamEntry}.EventStreamPosition"/> using multiple <see cref="ISources{T}.Sources"/>
 /// </summary>
-public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry> : ISharedEventStreamHandler<TContentPointer, TEventStreamSource, TEventStreamEntry>, IModifiableFolder, IMutableFolder, IChildFolder, IGetItem, IGetRoot, IGetFirstByName, IDelegable<NomadFolderData<TContentPointer>>
-    where TEventStreamSource : EventStream<TContentPointer>
+public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEntry> : IEventStreamHandler<TContentPointer, TEventStream, TEventStreamEntry>, IModifiableFolder, IMutableFolder, IChildFolder, IGetItem, IGetRoot, IGetFirstByName, IDelegable<NomadFolderData<TContentPointer>>
+    where TEventStream : EventStream<TContentPointer>
     where TEventStreamEntry : EventStreamEntry<TContentPointer>
     where TContentPointer : class
 {
-    /// <summary>
-    /// Creates a new instance of <see cref="NomadFolder{TContentPointer,TEventStreamSource,TEventStreamEntry}"/>.
-    /// </summary>
-    /// <param name="listeningEventStreamHandlers">The shared list of known nomad event streams participating in event seeking.</param>
-    protected NomadFolder(ICollection<ISharedEventStreamHandler<TContentPointer, TEventStreamSource, TEventStreamEntry>> listeningEventStreamHandlers)
-    {
-        listeningEventStreamHandlers.Add(this);
-        ListeningEventStreamHandlers = listeningEventStreamHandlers;
-    }
-
-    /// <inheritdoc />
-    public virtual ICollection<ISharedEventStreamHandler<TContentPointer, TEventStreamSource, TEventStreamEntry>> ListeningEventStreamHandlers { get; }
-
     /// <inheritdoc />
     public required string EventStreamHandlerId { get; init; }
 
@@ -39,10 +26,7 @@ public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStr
     public required ICollection<TContentPointer> Sources { get; init; }
 
     /// <inheritdoc />
-    public required ICollection<TEventStreamEntry> AllEventStreamEntries { get; set; }
-
-    /// <inheritdoc />
-    public required TEventStreamSource LocalEventStream { get; set; }
+    public required TEventStream LocalEventStream { get; set; }
 
     /// <inheritdoc />
     public TEventStreamEntry? EventStreamPosition { get; set; }
@@ -160,7 +144,7 @@ public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStr
         // At least one parent is required for a root to exist
         // Crawl up and return where parent is null
         var current = this;
-        while (current.Parent is NomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry> parent)
+        while (current.Parent is NomadFolder<TContentPointer, TEventStream, TEventStreamEntry> parent)
         {
             current = parent;
         }
@@ -206,14 +190,14 @@ public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStr
     /// </summary>
     /// <param name="fileData">The file data to transform.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    protected abstract Task<NomadFile<TContentPointer, TEventStreamSource, TEventStreamEntry>> FileDataToInstanceAsync(NomadFileData<TContentPointer> fileData, CancellationToken cancellationToken);   
+    protected abstract Task<NomadFile<TContentPointer, TEventStream, TEventStreamEntry>> FileDataToInstanceAsync(NomadFileData<TContentPointer> fileData, CancellationToken cancellationToken);   
     
     /// <summary>
     /// Transforms folder data to a folder instance.
     /// </summary>
     /// <param name="folderData">The folder data to transform.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    protected abstract Task<NomadFolder<TContentPointer, TEventStreamSource, TEventStreamEntry>> FolderDataToInstanceAsync(NomadFolderData<TContentPointer> folderData, CancellationToken cancellationToken); 
+    protected abstract Task<NomadFolder<TContentPointer, TEventStream, TEventStreamEntry>> FolderDataToInstanceAsync(NomadFolderData<TContentPointer> folderData, CancellationToken cancellationToken); 
 
     /// <summary>
     /// Applies the provided <paramref name="updateEvent"/>.
@@ -263,7 +247,7 @@ public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStr
             x.StorableItemId == updateEvent.StorableItemId ||
             x.StorableItemName == updateEvent.StorableItemName);
 
-        if (updateEvent.Overwrite)
+        if (updateEvent.Overwrite && existing is not null)
         {
             nomadFolder.Inner.Folders.Remove(existing);
             existing = null;
@@ -282,5 +266,30 @@ public abstract class NomadFolder<TContentPointer, TEventStreamSource, TEventStr
             nomadFolder.Inner.Folders.Add(nomadFolderData);
         
         return Task.FromResult<NomadFolderData<TContentPointer>?>(nomadFolderData);
+    }
+
+    /// <summary>
+    /// Applies the provided <paramref name="updateEvent"/> in the folder.
+    /// </summary>
+    /// <param name="updateEvent">The event content to apply without side effects.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the ongoing task.</param>
+    public Task ApplyFolderUpdateAsync(DeleteFromFolderEvent updateEvent, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        
+        // If deleted, it should already exist in the folder.
+        // Remove the item if it exists.
+        // If it doesn't exist, it may have been removed in another timeline (by another peer).
+        // Folders
+        var targetFolder = Inner.Folders.FirstOrDefault(x => x.StorableItemId == updateEvent.StorableItemId || x.StorableItemName == updateEvent.StorableItemName);
+        if (targetFolder is not null)
+            Inner.Folders.Remove(targetFolder);
+        
+        // Files
+        var targetFile = Inner.Files.FirstOrDefault(x=> x.StorableItemId == updateEvent.StorableItemId || updateEvent.StorableItemName == x.StorableItemName);
+        if (targetFile is not null)
+            Inner.Files.Remove(targetFile);
+
+        return Task.CompletedTask;
     }
 }

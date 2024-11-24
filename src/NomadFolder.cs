@@ -105,7 +105,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
     }
 
     /// <inheritdoc/>
-    public async Task DeleteAsync(IStorableChild item, CancellationToken cancellationToken = default)
+    public virtual async Task DeleteAsync(IStorableChild item, CancellationToken cancellationToken = default)
     {
         var storageUpdateEvent = new DeleteFromFolderEvent(Id, item.Id, item.Name);
         await ApplyEntryUpdateAsync(storageUpdateEvent, cancellationToken);
@@ -113,7 +113,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
     }
 
     /// <inheritdoc/>
-    public async Task<IChildFolder> CreateFolderAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
+    public virtual async Task<IChildFolder> CreateFolderAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
     {
         var storageUpdateEvent = new CreateFolderInFolderEvent(Id, $"{Id}/{name}", name, overwrite);
         var createdFolderData = await ApplyFolderUpdateAsync(storageUpdateEvent, cancellationToken);
@@ -124,7 +124,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
     }
 
     /// <inheritdoc/>
-    public async Task<IChildFile> CreateFileAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
+    public virtual async Task<IChildFile> CreateFileAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
     {
         var storageUpdateEvent = new CreateFileInFolderEvent(Id, $"{Id}/{name}", name, overwrite);
         var createdFileData = await ApplyFolderUpdateAsync(storageUpdateEvent, cancellationToken);
@@ -135,7 +135,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
     }
 
     /// <inheritdoc />
-    public Task<IFolder?> GetRootAsync(CancellationToken cancellationToken = default)
+    public virtual Task<IFolder?> GetRootAsync(CancellationToken cancellationToken = default)
     {
         // No parent = no root
         if (Parent is null)
@@ -204,7 +204,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
     /// </summary>
     /// <param name="updateEvent">The event content to apply without side effects.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing task.</param>
-    public Task<NomadFileData<TContentPointer>?> ApplyFolderUpdateAsync(CreateFileInFolderEvent updateEvent, CancellationToken cancellationToken)
+    public virtual Task<NomadFileData<TContentPointer>?> ApplyFolderUpdateAsync(CreateFileInFolderEvent updateEvent, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var nomadFolder = this;
@@ -237,7 +237,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
     /// </summary>
     /// <param name="updateEvent">The event content to apply without side effects.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing task.</param>
-    public Task<NomadFolderData<TContentPointer>?> ApplyFolderUpdateAsync(CreateFolderInFolderEvent updateEvent, CancellationToken cancellationToken)
+    public virtual Task<NomadFolderData<TContentPointer>?> ApplyFolderUpdateAsync(CreateFolderInFolderEvent updateEvent, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var nomadFolder = this;
@@ -273,7 +273,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
     /// </summary>
     /// <param name="updateEvent">The event content to apply without side effects.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing task.</param>
-    public Task ApplyFolderUpdateAsync(DeleteFromFolderEvent updateEvent, CancellationToken cancellationToken)
+    public virtual Task ApplyFolderUpdateAsync(DeleteFromFolderEvent updateEvent, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         

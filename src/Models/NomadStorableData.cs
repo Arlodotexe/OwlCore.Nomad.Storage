@@ -3,7 +3,7 @@
 namespace OwlCore.Nomad.Storage.Models;
 
 /// <summary>
-/// A common base record for <see cref="NomadFolderData{TContentPointer}"/> and <see cref="NomadFileData{TContentPointer}"/>.
+/// A common base record for <see cref="NomadFolderData{TImmutablePointer, TMutablePointer}"/> and <see cref="NomadFileData{TContentPointer}"/>.
 /// </summary>
 public abstract record NomadStorableData
 {

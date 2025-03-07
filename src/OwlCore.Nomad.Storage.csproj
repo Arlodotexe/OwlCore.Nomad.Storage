@@ -14,13 +14,17 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.9.1</Version>
+		<Version>0.10.0</Version>
 		<Product>OwlCore</Product>
 		<Description></Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Storage</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.10.0 ---
+[Breaking]
+The first generic param TContentPointer on NomadFolder, NomadFile and NomadFolderData have been expanded to TImmutablePointer, TMutablePointer and all implementation code has been updated accordingly.
+
 --- 0.9.1 ---
 [Improvements]
 Refactor methods in NomadFolder to be virtual for extensibility.
@@ -134,7 +138,6 @@ Initial release of OwlCore.Nomad.Storage.
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="OwlCore.Extensions" Version="0.9.1" />
-		<PackageReference Include="OwlCore.Nomad" Version="0.9.0" />
 		<PackageReference Include="OwlCore.Storage" Version="0.12.0" />
 		<PackageReference Include="PolySharp" Version="1.14.1">
 		  <PrivateAssets>all</PrivateAssets>
@@ -148,5 +151,9 @@ Initial release of OwlCore.Nomad.Storage.
 	    <Pack>True</Pack>
 	    <PackagePath>\</PackagePath>
 	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\ocnomad\src\OwlCore.Nomad.csproj" />
 	</ItemGroup>
 </Project>

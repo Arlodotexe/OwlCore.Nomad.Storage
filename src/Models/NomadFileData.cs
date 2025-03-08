@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace OwlCore.Nomad.Storage.Models;
+﻿namespace OwlCore.Nomad.Storage.Models;
 
 /// <summary>
 /// Represents the state of a file stored in Nomad.

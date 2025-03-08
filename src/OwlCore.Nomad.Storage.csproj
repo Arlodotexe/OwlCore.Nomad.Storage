@@ -14,13 +14,21 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.9.1</Version>
+		<Version>0.10.0</Version>
 		<Product>OwlCore</Product>
-		<Description></Description>
+		<Description>A virtual storage implementation powered by event stream sourcing.</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Storage</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.10.0 ---
+[Breaking]
+The first generic param TContentPointer on NomadFolder, NomadFile and NomadFolderData have been expanded to TImmutablePointer, TMutablePointer and all implementation code has been updated accordingly.
+Inherited and implemented breaking changes from OwlCore.Nomad 0.10.0.
+NomadFile generics are now NomadFile{TImmutablePointer, TMutablePointer, TEventStream, TEventStreamEntry} instead of NomadFile{TContentPointer, TEventStream, TEventStreamEntry}.
+NomadFolder generics are now NomadFolder{TImmutablePointer, TMutablePointer, TEventStream, TEventStreamEntry} instead of NomadFolder{TContentPointer, TEventStream, TEventStreamEntry}.
+NomadFolderData generics are now NomadFolderData{TImmutablePointer, TMutablePointer} instead of NomadFolderData{TContentPointer}.
+
 --- 0.9.1 ---
 [Improvements]
 Refactor methods in NomadFolder to be virtual for extensibility.
@@ -130,12 +138,12 @@ Initial release of OwlCore.Nomad.Storage.
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.2" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="OwlCore.Extensions" Version="0.9.1" />
-		<PackageReference Include="OwlCore.Nomad" Version="0.9.0" />
-		<PackageReference Include="OwlCore.Storage" Version="0.12.0" />
+		<PackageReference Include="OwlCore.Storage" Version="0.12.2" />
+		<PackageReference Include="OwlCore.Nomad" Version="0.10.1" />
 		<PackageReference Include="PolySharp" Version="1.14.1">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

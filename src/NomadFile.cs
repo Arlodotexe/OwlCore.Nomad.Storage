@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 namespace OwlCore.Nomad.Storage;
 
 /// <summary>
-/// A virtual file constructed by advancing an <see cref="IEventStreamHandler{TContentPointer, TEventStreamSource, TEventStreamEntry}.EventStreamPosition"/> using multiple <see cref="ISources{T}.Sources"/>.
+/// A virtual file constructed by advancing an <see cref="IEventStreamHandler{TImmutablePointer, TMutablePointer, TEventStreamSource, TEventStreamEntry}.EventStreamPosition"/> using multiple <see cref="ISources{T}.Sources"/>.
 /// </summary>
-public abstract class NomadFile<TContentPointer, TEventStreamSource, TEventStreamEntry> : IFile, IChildFile, IEventStreamHandler<TContentPointer, TEventStreamSource, TEventStreamEntry>, IDelegable<NomadFileData<TContentPointer>>
-    where TEventStreamSource : EventStream<TContentPointer>
-    where TEventStreamEntry : EventStreamEntry<TContentPointer>
-    where TContentPointer : class
+public abstract class NomadFile<TImmutablePointer, TMutablePointer, TEventStreamSource, TEventStreamEntry> : IFile, IChildFile, IEventStreamHandler<TImmutablePointer, TMutablePointer, TEventStreamSource, TEventStreamEntry>, IDelegable<NomadFileData<TImmutablePointer>>
+    where TEventStreamSource : EventStream<TImmutablePointer>
+    where TEventStreamEntry : EventStreamEntry<TImmutablePointer>
+    where TImmutablePointer : class
 {
     /// <inheritdoc cref="IStorable.Id" />
     public string Id => Inner.StorableItemId;
@@ -31,13 +31,13 @@ public abstract class NomadFile<TContentPointer, TEventStreamSource, TEventStrea
     public required IFolder? Parent { get; init; }
     
     /// <inheritdoc />
-    public required NomadFileData<TContentPointer> Inner { get; set; }
+    public required NomadFileData<TImmutablePointer> Inner { get; set; }
 
     /// <inheritdoc />
     public virtual Task ResetEventStreamPositionAsync(CancellationToken cancellationToken)
     {
         EventStreamPosition = null;
-        Inner = new NomadFileData<TContentPointer> {  StorableItemName = Name, StorableItemId = Id, ContentId = null, };
+        Inner = new NomadFileData<TImmutablePointer> {  StorableItemName = Name, StorableItemId = Id, ContentId = null, };
         return Task.CompletedTask;
     }
 
@@ -48,7 +48,7 @@ public abstract class NomadFile<TContentPointer, TEventStreamSource, TEventStrea
     public TEventStreamEntry? EventStreamPosition { get; set; }
 
     /// <inheritdoc />
-    public required ICollection<TContentPointer> Sources { get; init; }
+    public required ICollection<TMutablePointer> Sources { get; init; }
 
     /// <inheritdoc />
     public abstract Task<Stream> OpenStreamAsync(FileAccess accessMode = FileAccess.Read, CancellationToken cancellationToken = default);

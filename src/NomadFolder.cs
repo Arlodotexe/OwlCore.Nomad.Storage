@@ -8,22 +8,23 @@ using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Diagnostics;
 using OwlCore.Nomad.Storage.Models;
+using System;
 
 namespace OwlCore.Nomad.Storage;
 
 /// <summary>
-/// A virtual folder constructed by advancing an <see cref="IEventStreamHandler{TContentPointer, TEventStream, TEventStreamEntry}.EventStreamPosition"/> using multiple <see cref="ISources{T}.Sources"/>
+/// A virtual folder constructed by advancing an <see cref="IEventStreamHandler{TImmutablePointer, TMutablePointer, TEventStream, TEventStreamEntry}.EventStreamPosition"/> using multiple <see cref="ISources{T}.Sources"/>
 /// </summary>
-public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEntry> : IEventStreamHandler<TContentPointer, TEventStream, TEventStreamEntry>, IModifiableFolder, IMutableFolder, IChildFolder, IGetItem, IGetRoot, IGetFirstByName, IDelegable<NomadFolderData<TContentPointer>>
-    where TEventStream : EventStream<TContentPointer>
-    where TEventStreamEntry : EventStreamEntry<TContentPointer>
-    where TContentPointer : class
+public abstract class NomadFolder<TImmutablePointer, TMutablePointer, TEventStream, TEventStreamEntry> : IEventStreamHandler<TImmutablePointer, TMutablePointer, TEventStream, TEventStreamEntry>, IModifiableFolder, IMutableFolder, IChildFolder, IGetItem, IGetRoot, IGetFirstByName, IDelegable<NomadFolderData<TImmutablePointer, TMutablePointer>>
+    where TEventStream : EventStream<TImmutablePointer>
+    where TEventStreamEntry : EventStreamEntry<TImmutablePointer>
+    where TImmutablePointer : class
 {
     /// <inheritdoc />
     public required string EventStreamHandlerId { get; init; }
 
     /// <inheritdoc />
-    public required ICollection<TContentPointer> Sources { get; init; }
+    public required ICollection<TMutablePointer> Sources { get; init; }
 
     /// <inheritdoc />
     public required TEventStream LocalEventStream { get; set; }
@@ -43,7 +44,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
     public required IFolder? Parent { get; init; }
     
     /// <inheritdoc />
-    public required NomadFolderData<TContentPointer> Inner { get; set; }
+    public required NomadFolderData<TImmutablePointer, TMutablePointer> Inner { get; set; }
 
     /// <inheritdoc />
     public virtual async IAsyncEnumerable<IStorableChild> GetItemsAsync(StorableType type = StorableType.All, [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -108,16 +109,16 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
     public virtual async Task DeleteAsync(IStorableChild item, CancellationToken cancellationToken = default)
     {
         var storageUpdateEvent = new DeleteFromFolderEvent(Id, item.Id, item.Name);
-        await ApplyEntryUpdateAsync(storageUpdateEvent, cancellationToken);
-        EventStreamPosition = await AppendNewEntryAsync(storageUpdateEvent, cancellationToken);
+        EventStreamPosition = await AppendNewEntryAsync(targetId: item.Id, eventId: nameof(DeleteFromFolderEvent), storageUpdateEvent, DateTime.UtcNow, cancellationToken);
+        await ApplyEntryUpdateAsync(EventStreamPosition, storageUpdateEvent, cancellationToken);
     }
 
     /// <inheritdoc/>
     public virtual async Task<IChildFolder> CreateFolderAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
     {
         var storageUpdateEvent = new CreateFolderInFolderEvent(Id, $"{Id}/{name}", name, overwrite);
+        EventStreamPosition = await AppendNewEntryAsync(targetId: Id, eventId: nameof(CreateFolderInFolderEvent), storageUpdateEvent, DateTime.UtcNow, cancellationToken);
         var createdFolderData = await ApplyFolderUpdateAsync(storageUpdateEvent, cancellationToken);
-        EventStreamPosition = await AppendNewEntryAsync(storageUpdateEvent, cancellationToken);
 
         Guard.IsNotNull(createdFolderData);
         return await FolderDataToInstanceAsync(createdFolderData, cancellationToken);
@@ -127,8 +128,8 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
     public virtual async Task<IChildFile> CreateFileAsync(string name, bool overwrite = false, CancellationToken cancellationToken = default)
     {
         var storageUpdateEvent = new CreateFileInFolderEvent(Id, $"{Id}/{name}", name, overwrite);
+        EventStreamPosition = await AppendNewEntryAsync(targetId: Id, eventId: nameof(CreateFileInFolderEvent), storageUpdateEvent, DateTime.UtcNow, cancellationToken);
         var createdFileData = await ApplyFolderUpdateAsync(storageUpdateEvent, cancellationToken);
-        EventStreamPosition = await AppendNewEntryAsync(storageUpdateEvent, cancellationToken);
 
         Guard.IsNotNull(createdFileData);
         return await FileDataToInstanceAsync(createdFileData, cancellationToken);
@@ -144,7 +145,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
         // At least one parent is required for a root to exist
         // Crawl up and return where parent is null
         var current = this;
-        while (current.Parent is NomadFolder<TContentPointer, TEventStream, TEventStreamEntry> parent)
+        while (current.Parent is NomadFolder<TImmutablePointer, TMutablePointer, TEventStream, TEventStreamEntry> parent)
         {
             current = parent;
         }
@@ -165,46 +166,50 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
     public virtual Task ResetEventStreamPositionAsync(CancellationToken cancellationToken)
     {
         EventStreamPosition = null;
-        Inner = new NomadFolderData<TContentPointer> {  StorableItemName = Name, StorableItemId = Id, Sources = Sources };
+        Inner = new NomadFolderData<TImmutablePointer, TMutablePointer> {  StorableItemName = Name, StorableItemId = Id, Sources = Sources };
             
         return Task.CompletedTask;
     }
-    
+
     /// <summary>
     /// Appends a new entry to the event stream.
     /// </summary>
+    /// <param name="targetId">The object being targeted with this event.</param>
+    /// <param name="eventId">The event that occurred within some domain.</param>
     /// <param name="updateEvent">The event to append.</param>
+    /// <param name="timestampUtc">The time in UTC that the event occurred.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
     /// <returns>The event stream entry that was created and appended to the event stream.</returns>
-    public abstract Task<TEventStreamEntry> AppendNewEntryAsync(FolderUpdateEvent updateEvent, CancellationToken cancellationToken = default);
-    
+    public abstract Task<TEventStreamEntry> AppendNewEntryAsync(string targetId, string eventId, FolderUpdateEvent updateEvent, DateTime? timestampUtc, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Applies an event stream update to this object without side effects.
     /// </summary>
+    /// <param name="eventStreamEntry">The event stream entry to apply.</param>
     /// <param name="updateEvent">The update to apply without side effects.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    public abstract Task ApplyEntryUpdateAsync(FolderUpdateEvent updateEvent, CancellationToken cancellationToken);
+    public abstract Task ApplyEntryUpdateAsync(EventStreamEntry<TImmutablePointer> eventStreamEntry, FolderUpdateEvent updateEvent, CancellationToken cancellationToken);
 
     /// <summary>
     /// Transform file data to file instance.
     /// </summary>
     /// <param name="fileData">The file data to transform.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    protected abstract Task<NomadFile<TContentPointer, TEventStream, TEventStreamEntry>> FileDataToInstanceAsync(NomadFileData<TContentPointer> fileData, CancellationToken cancellationToken);   
+    protected abstract Task<NomadFile<TImmutablePointer, TMutablePointer, TEventStream, TEventStreamEntry>> FileDataToInstanceAsync(NomadFileData<TImmutablePointer> fileData, CancellationToken cancellationToken);   
     
     /// <summary>
     /// Transforms folder data to a folder instance.
     /// </summary>
     /// <param name="folderData">The folder data to transform.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    protected abstract Task<NomadFolder<TContentPointer, TEventStream, TEventStreamEntry>> FolderDataToInstanceAsync(NomadFolderData<TContentPointer> folderData, CancellationToken cancellationToken); 
+    protected abstract Task<NomadFolder<TImmutablePointer, TMutablePointer, TEventStream, TEventStreamEntry>> FolderDataToInstanceAsync(NomadFolderData<TImmutablePointer, TMutablePointer> folderData, CancellationToken cancellationToken); 
 
     /// <summary>
     /// Applies the provided <paramref name="updateEvent"/>.
     /// </summary>
     /// <param name="updateEvent">The event content to apply without side effects.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing task.</param>
-    public virtual Task<NomadFileData<TContentPointer>?> ApplyFolderUpdateAsync(CreateFileInFolderEvent updateEvent, CancellationToken cancellationToken)
+    public virtual Task<NomadFileData<TImmutablePointer>?> ApplyFolderUpdateAsync(CreateFileInFolderEvent updateEvent, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var nomadFolder = this;
@@ -219,7 +224,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
             existing = null;
         }
 
-        var nomadFileData = existing ?? new NomadFileData<TContentPointer>
+        var nomadFileData = existing ?? new NomadFileData<TImmutablePointer>
         {
             ContentId = null,
             StorableItemId = updateEvent.StorableItemId,
@@ -229,7 +234,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
         if (nomadFolder.Inner.Files.All(x => x.StorableItemId != nomadFileData.StorableItemId))
             nomadFolder.Inner.Files.Add(nomadFileData);
         
-        return Task.FromResult<NomadFileData<TContentPointer>?>(nomadFileData);
+        return Task.FromResult<NomadFileData<TImmutablePointer>?>(nomadFileData);
     }
 
     /// <summary>
@@ -237,7 +242,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
     /// </summary>
     /// <param name="updateEvent">The event content to apply without side effects.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing task.</param>
-    public virtual Task<NomadFolderData<TContentPointer>?> ApplyFolderUpdateAsync(CreateFolderInFolderEvent updateEvent, CancellationToken cancellationToken)
+    public virtual Task<NomadFolderData<TImmutablePointer, TMutablePointer>?> ApplyFolderUpdateAsync(CreateFolderInFolderEvent updateEvent, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var nomadFolder = this;
@@ -253,7 +258,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
             existing = null;
         }
 
-        var nomadFolderData = existing ?? new NomadFolderData<TContentPointer>
+        var nomadFolderData = existing ?? new NomadFolderData<TImmutablePointer, TMutablePointer>
         {
             StorableItemName = updateEvent.StorableItemName,
             StorableItemId = updateEvent.StorableItemId,
@@ -265,7 +270,7 @@ public abstract class NomadFolder<TContentPointer, TEventStream, TEventStreamEnt
         if (nomadFolder.Inner.Folders.All(x => x.StorableItemId != nomadFolderData.StorableItemId))
             nomadFolder.Inner.Folders.Add(nomadFolderData);
         
-        return Task.FromResult<NomadFolderData<TContentPointer>?>(nomadFolderData);
+        return Task.FromResult<NomadFolderData<TImmutablePointer, TMutablePointer>?>(nomadFolderData);
     }
 
     /// <summary>

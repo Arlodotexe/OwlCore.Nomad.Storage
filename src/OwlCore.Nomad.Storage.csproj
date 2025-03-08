@@ -16,7 +16,7 @@
 		<Author>Arlo Godfrey</Author>
 		<Version>0.10.0</Version>
 		<Product>OwlCore</Product>
-		<Description></Description>
+		<Description>A virtual storage implementation powered by event stream sourcing.</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Storage</PackageProjectUrl>

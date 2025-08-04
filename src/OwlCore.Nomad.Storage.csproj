@@ -14,13 +14,17 @@
 		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
 		<Author>Arlo Godfrey</Author>
-		<Version>0.10.0</Version>
+		<Version>0.10.1</Version>
 		<Product>OwlCore</Product>
 		<Description>A virtual storage implementation powered by event stream sourcing.</Description>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Arlodotexe/OwlCore.Nomad.Storage</PackageProjectUrl>
 		<PackageReleaseNotes>
+--- 0.10.1 ---
+[Improvements]
+Updated OwlCore.Storage to 0.13.0.
+
 --- 0.10.0 ---
 [Breaking]
 The first generic param TContentPointer on NomadFolder, NomadFile and NomadFolderData have been expanded to TImmutablePointer, TMutablePointer and all implementation code has been updated accordingly.
@@ -142,7 +146,7 @@ Initial release of OwlCore.Nomad.Storage.
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="OwlCore.Extensions" Version="0.9.1" />
-		<PackageReference Include="OwlCore.Storage" Version="0.12.2" />
+		<PackageReference Include="OwlCore.Storage" Version="0.13.0" />
 		<PackageReference Include="OwlCore.Nomad" Version="0.10.1" />
 		<PackageReference Include="PolySharp" Version="1.14.1">
 		  <PrivateAssets>all</PrivateAssets>

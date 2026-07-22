@@ -1,4 +1,5 @@
-﻿using OwlCore.Storage;
+﻿using System;
+using OwlCore.Storage;
 
 namespace OwlCore.Nomad.Storage.Models;
 
@@ -11,9 +12,24 @@ public abstract record NomadStorableData
     /// The <see cref="IStorable.Id"/> of the file or folder this record refers to.
     /// </summary>
     public required string StorableItemId { get; set; }
-    
+
     /// <summary>
     /// The <see cref="IStorable.Name"/> of the file or folder this record refers to.
     /// </summary>
     public required string StorableItemName { get; set; }
+
+    /// <summary>
+    /// The date, time and timezone offset that this storable was last modified at.
+    /// </summary>
+    public required DateTimeOffset? LastModifiedAt { get; set; }
+
+    /// <summary>
+    /// The date, time and timezone offset that this storable was last accessed at.
+    /// </summary>
+    public required DateTimeOffset? CreatedAt { get; set; }
+
+    /// <summary>
+    /// The date, time and timezone offset that this storable was last accessed at.
+    /// </summary>
+    public required DateTimeOffset? LastAccessedAt { get; set; }
 }

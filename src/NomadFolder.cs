@@ -42,7 +42,7 @@ public abstract class NomadFolder<TImmutablePointer, TMutablePointer, TEventStre
     /// The parent for this folder, if any.
     /// </summary>
     public required IFolder? Parent { get; init; }
-    
+
     /// <inheritdoc />
     public required NomadFolderData<TImmutablePointer, TMutablePointer> Inner { get; set; }
 
@@ -62,7 +62,7 @@ public abstract class NomadFolder<TImmutablePointer, TMutablePointer, TEventStre
                     yield return await FileDataToInstanceAsync(item, cancellationToken);
             }
         }
-            
+
 
         if (type.HasFlag(StorableType.Folder))
         {
@@ -70,7 +70,7 @@ public abstract class NomadFolder<TImmutablePointer, TMutablePointer, TEventStre
             {
                 if (cancellationToken.IsCancellationRequested)
                     yield break;
-                
+
                 if (item != null)
                     yield return await FolderDataToInstanceAsync(item, cancellationToken);
             }
@@ -83,11 +83,11 @@ public abstract class NomadFolder<TImmutablePointer, TMutablePointer, TEventStre
         var fileTarget = Inner.Files.FirstOrDefault(x => x.StorableItemId == id);
         if (fileTarget is not null)
             return await FileDataToInstanceAsync(fileTarget, cancellationToken);
-        
+
         var folderTarget = Inner.Folders.FirstOrDefault(x => x.StorableItemId == id);
         if (folderTarget is not null)
             return await FolderDataToInstanceAsync(folderTarget, cancellationToken);
-        
+
         throw new FileNotFoundException();
     }
 
@@ -141,7 +141,7 @@ public abstract class NomadFolder<TImmutablePointer, TMutablePointer, TEventStre
         // No parent = no root
         if (Parent is null)
             return Task.FromResult<IFolder?>(null);
-        
+
         // At least one parent is required for a root to exist
         // Crawl up and return where parent is null
         var current = this;
@@ -166,8 +166,16 @@ public abstract class NomadFolder<TImmutablePointer, TMutablePointer, TEventStre
     public virtual Task ResetEventStreamPositionAsync(CancellationToken cancellationToken)
     {
         EventStreamPosition = null;
-        Inner = new NomadFolderData<TImmutablePointer, TMutablePointer> {  StorableItemName = Name, StorableItemId = Id, Sources = Sources };
-            
+        Inner = new NomadFolderData<TImmutablePointer, TMutablePointer>
+        {
+            StorableItemName = Name,
+            StorableItemId = Id,
+            Sources = Sources,
+            CreatedAt = null,
+            LastAccessedAt = null,
+            LastModifiedAt = null
+        };
+
         return Task.CompletedTask;
     }
 
@@ -195,14 +203,14 @@ public abstract class NomadFolder<TImmutablePointer, TMutablePointer, TEventStre
     /// </summary>
     /// <param name="fileData">The file data to transform.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    protected abstract Task<NomadFile<TImmutablePointer, TMutablePointer, TEventStream, TEventStreamEntry>> FileDataToInstanceAsync(NomadFileData<TImmutablePointer> fileData, CancellationToken cancellationToken);   
-    
+    protected abstract Task<NomadFile<TImmutablePointer, TMutablePointer, TEventStream, TEventStreamEntry>> FileDataToInstanceAsync(NomadFileData<TImmutablePointer> fileData, CancellationToken cancellationToken);
+
     /// <summary>
     /// Transforms folder data to a folder instance.
     /// </summary>
     /// <param name="folderData">The folder data to transform.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the ongoing operation.</param>
-    protected abstract Task<NomadFolder<TImmutablePointer, TMutablePointer, TEventStream, TEventStreamEntry>> FolderDataToInstanceAsync(NomadFolderData<TImmutablePointer, TMutablePointer> folderData, CancellationToken cancellationToken); 
+    protected abstract Task<NomadFolder<TImmutablePointer, TMutablePointer, TEventStream, TEventStreamEntry>> FolderDataToInstanceAsync(NomadFolderData<TImmutablePointer, TMutablePointer> folderData, CancellationToken cancellationToken);
 
     /// <summary>
     /// Applies the provided <paramref name="updateEvent"/>.
@@ -213,7 +221,7 @@ public abstract class NomadFolder<TImmutablePointer, TMutablePointer, TEventStre
     {
         cancellationToken.ThrowIfCancellationRequested();
         var nomadFolder = this;
-        
+
         var existing = nomadFolder.Inner.Files.FirstOrDefault(x =>
             x.StorableItemId == updateEvent.StorableItemId ||
             x.StorableItemName == updateEvent.StorableItemName);
@@ -229,11 +237,14 @@ public abstract class NomadFolder<TImmutablePointer, TMutablePointer, TEventStre
             ContentId = null,
             StorableItemId = updateEvent.StorableItemId,
             StorableItemName = updateEvent.StorableItemName,
+            CreatedAt = null,
+            LastAccessedAt = null,
+            LastModifiedAt = null
         };
-        
+
         if (nomadFolder.Inner.Files.All(x => x.StorableItemId != nomadFileData.StorableItemId))
             nomadFolder.Inner.Files.Add(nomadFileData);
-        
+
         return Task.FromResult<NomadFileData<TImmutablePointer>?>(nomadFileData);
     }
 
@@ -265,11 +276,14 @@ public abstract class NomadFolder<TImmutablePointer, TMutablePointer, TEventStre
             Sources = nomadFolder.Sources,
             Files = [],
             Folders = [],
+            CreatedAt = null,
+            LastAccessedAt = null,
+            LastModifiedAt = null
         };
-        
+
         if (nomadFolder.Inner.Folders.All(x => x.StorableItemId != nomadFolderData.StorableItemId))
             nomadFolder.Inner.Folders.Add(nomadFolderData);
-        
+
         return Task.FromResult<NomadFolderData<TImmutablePointer, TMutablePointer>?>(nomadFolderData);
     }
 
@@ -281,7 +295,7 @@ public abstract class NomadFolder<TImmutablePointer, TMutablePointer, TEventStre
     public virtual Task ApplyFolderUpdateAsync(DeleteFromFolderEvent updateEvent, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        
+
         // If deleted, it should already exist in the folder.
         // Remove the item if it exists.
         // If it doesn't exist, it may have been removed in another timeline (by another peer).
@@ -289,9 +303,9 @@ public abstract class NomadFolder<TImmutablePointer, TMutablePointer, TEventStre
         var targetFolder = Inner.Folders.FirstOrDefault(x => x.StorableItemId == updateEvent.StorableItemId || x.StorableItemName == updateEvent.StorableItemName);
         if (targetFolder is not null)
             Inner.Folders.Remove(targetFolder);
-        
+
         // Files
-        var targetFile = Inner.Files.FirstOrDefault(x=> x.StorableItemId == updateEvent.StorableItemId || updateEvent.StorableItemName == x.StorableItemName);
+        var targetFile = Inner.Files.FirstOrDefault(x => x.StorableItemId == updateEvent.StorableItemId || updateEvent.StorableItemName == x.StorableItemName);
         if (targetFile is not null)
             Inner.Files.Remove(targetFile);
 

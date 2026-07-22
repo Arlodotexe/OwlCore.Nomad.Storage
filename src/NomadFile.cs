@@ -29,7 +29,7 @@ public abstract class NomadFile<TImmutablePointer, TMutablePointer, TEventStream
     /// The parent folder of this file.
     /// </summary>
     public required IFolder? Parent { get; init; }
-    
+
     /// <inheritdoc />
     public required NomadFileData<TImmutablePointer> Inner { get; set; }
 
@@ -37,7 +37,16 @@ public abstract class NomadFile<TImmutablePointer, TMutablePointer, TEventStream
     public virtual Task ResetEventStreamPositionAsync(CancellationToken cancellationToken)
     {
         EventStreamPosition = null;
-        Inner = new NomadFileData<TImmutablePointer> {  StorableItemName = Name, StorableItemId = Id, ContentId = null, };
+        Inner = new NomadFileData<TImmutablePointer>
+        {
+            StorableItemName = Name,
+            StorableItemId = Id,
+            ContentId = null,
+            CreatedAt = null,
+            LastAccessedAt = null,
+            LastModifiedAt = null
+        };
+        
         return Task.CompletedTask;
     }
 
